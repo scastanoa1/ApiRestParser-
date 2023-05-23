@@ -1,56 +1,63 @@
+import java.util.Scanner;
+
 public class Controladora {
+    static Scanner scan = new Scanner(System.in);
     private String tipo;
     private String cabecera;
     private String body;
-    private final Methods method = new BD();
+    private final Methods bd = new BD();
     private int id;
-    private final BD bd = new BD();
 
-    private void procesarRequest(String m){
-        switch (method) {
-            case "GET" -> {
-                if (cabecera.equals("http://localhost:8080/apis/users")) {
-                    GET();
-                }
-            }
-            case "POST" -> {
-                if (cabecera.equals("http://localhost:8080/apis/users")) {
-                    POST(body);
-                }
-            }
-            default -> System.out.println("Método no soportado");
+    public Controladora(String tipo, String cabecera, String body, int id) {
+        if(Parser.revisarTipo(tipo)&&Parser.revisarHeaders(cabecera)){
+            apiRest(tipo,cabecera,body,id);
+            procesarRequest(id);
+        }
+        else{
+            System.out.println("Error método o header no encontrado");
         }
     }
-    private void procesarRequest(String m, int id){
-        switch (method) {
-            case "GET" -> {
-                if (cabecera.equals("http://localhost:8080/apis/users")) {
-                    GETUser(id);
+    public Controladora(String tipo, String cabecera, String body) {
+        if(Parser.revisarTipo(tipo)&&Parser.revisarHeaders(cabecera)){
+            apiRest(tipo,cabecera,body);
+            procesarRequest();
+        }
+        else{
+            System.out.println("Error método o header no encontrado");
+        }
+    }
+
+    private  void procesarRequest(){
+        switch (tipo.toUpperCase()){
+            case"GET":
+                bd.mostrarTodosUsuarios();
+                break;
+            case"POST":{
+                bd.agregarUsuario(body);
+                break;
                 }
+        }
+
+    }
+    private void procesarRequest(int id){
+        switch (tipo.toUpperCase()){
+            case"GET":
+                bd.mostrarUsuario(id);
+                break;
+            case"PUT":{
+                bd.actualizarUsuario(id,body);
+                break;
             }
-            case "POST" -> {
-                if (cabecera.equals("http://localhost:8080/apis/users")) {
-                    POST(body);
-                }
+            case"DELETE":{
+                bd.eliminarUsuario(id);
+                break;
             }
-            case "PUT" -> {
-                if (cabecera.equals("http://localhost:8080/apis/users")) {
-                    PUT(body, id);
-                }
-            }
-            case "DELETE" -> {
-                if (cabecera.equals("http://localhost:8080/apis/users")) {
-                    DELETE(id);
-                }
-            }
-            default -> System.out.println("Método no soportado");
         }
     }
     private void apiRest(String tipo, String cabecera, String body){
         this.tipo = tipo;
         this.cabecera = cabecera;
         this.body = body;
-        procesarRequest(body);
     }
     private void apiRest(String tipo, String cabecera, String body, int id){
         this.tipo = tipo;
@@ -58,27 +65,91 @@ public class Controladora {
         this.body = body;
         this.id = id;
     }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    public static void Menu(){
+        part1();
+        String procesando ="";
+        while(!procesando.equals("6")){
+            System.out.println("-------------------------------------------------------------------");
+            System.out.println("-Menu de opciones");
+            System.out.println("1. Leer usuarios existentes.");
+            System.out.println("2. Encontrar usuario existente.");
+            System.out.println("3. Crear un usuario.");
+            System.out.println("4. Editar un usuario existente.");
+            System.out.println("5. Eliminar un usuario.");
+            System.out.println("6. Salir.");
+            System.out.print("-> ");
+            procesando = scan.next();
+            switch (procesando){
+                case"1":
+                    GET();
+                    break;
+                case"2":
+                    System.out.print("Ingrese el id del usuario: ");
+                    GET(scan.nextInt());
+                    break;
+                case"3":
+                    POST();
+                    break;
+                case"4":
+                    System.out.print("Ingrese el id del usuario: ");
+                    PUT(scan.nextInt());
+                    break;
+                case"5":
+                    System.out.print("Ingrese el id del usuario: ");
+                    DELETE(scan.nextInt());
+                    break;
 
-    public void GET(){
-        bd.mostrarTodosUsuarios();
-        System.out.println("GET");
+                case"6":
+                    System.out.println("Finalizando el programa");
+                    System.exit(0);
+                default:
+                    System.out.println("Opción no encontrada");
+                    break;
+            }
+
+        }
     }
-    public void GETUser(int id){
-        bd.mostrarUsuario(id);
-        System.out.println("GETUser");
+    public static void GET(){
+        new Controladora("GET","Content-Type: app/csv","");
     }
-    public void POST(String body){
-        bd.agregarUsuario(body);
-        System.out.println("POST");
+    public static void GET(int id){
+        new Controladora("GET","Content-Type: app/csv","",id);
     }
-    public void PUT(String body, int id){
-        bd.actualizarUsuario(id, body);
-        System.out.println("PUT");
+    public static void POST(){
+        String bodi;
+        System.out.println("+Ingrese el cuerpo de solicitud en formato csv");
+        System.out.println("+De forma que <NombreUsuario>,<Contraseña>,<Nombre><Espacio><Apellido>");
+            bodi = scan.nextLine();
+        while(!Parser.revisarBody(bodi)){
+            System.out.println("--> ");
+            bodi = scan.nextLine();
+        }
+        new Controladora("POST","Content-Type: app/csv",bodi);
     }
-    public void DELETE(int id){
-        bd.eliminarUsuario(id);
-        System.out.println("DELETE");
+    public static void PUT(int id){
+        String bodi;
+        System.out.println("+Ingrese el cuerpo de solicitud en formato csv");
+        System.out.println("+De forma que <NombreUsuario>,<Contraseña>,<Nombre><Espacio><Apellido>");
+        bodi = scan.nextLine();
+        while(!Parser.revisarBody(bodi)){
+            System.out.println("--> ");
+            bodi = scan.nextLine();
+        }
+        new Controladora("PUT","Content-Type: app/csv",bodi,id);
     }
+    public static void DELETE(int id){
+        new Controladora("DELETE","Content-Type: app/csv","",id);
+    }
+
+    public static void part1(){
+        Scanner scan = new Scanner(System.in);
+        do {
+            System.out.print("Ingrese una URL para concectarse: ");
+        } while (!Parser.revisarURI(scan.nextLine()));
+    }
+
+
 }
 
 

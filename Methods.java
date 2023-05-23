@@ -1,7 +1,8 @@
 public interface Methods {
-    void agregarUsuario(User user);
+    void agregarUsuario(String body);
     void eliminarUsuario(int id);
-    void actualizarUsuario(int id, User user);
+    void actualizarUsuario(int id, String body);
     void mostrarUsuario(int id);
     void mostrarTodosUsuarios();
+
 }
